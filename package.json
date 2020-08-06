@@ -1,0 +1,35 @@
+{
+  "name": "clock-panel",
+  "version": "1.1.0-dev",
+  "description": "Clock Panel Plugin for Grafana",
+  "scripts": {
+    "build": "grafana-toolkit plugin:build",
+    "test": "grafana-toolkit plugin:test",
+    "dev": "grafana-toolkit plugin:dev",
+    "watch": "grafana-toolkit plugin:dev --watch"
+  },
+  "keywords": [
+    "clock",
+    "grafana",
+    "plugin",
+    "panel"
+  ],
+  "author": "Grafana Labs",
+  "license": "MIT",
+  "devDependencies": {
+    "@grafana/data": "next",
+    "@grafana/runtime": "next",
+    "@grafana/toolkit": "next",
+    "@grafana/ui": "next",
+    "@types/lodash": "latest",
+    "@types/moment-timezone": "^0.5.12",
+    "lodash": "latest",
+    "moment": "2.24.0"
+  },
+  "dependencies": {
+    "esri-loader": "^2.15.0",
+    "ethers": "^5.0.7",
+    "moment-timezone": "0.5.28",
+    "request": "^2.88.2"
+  }
+}

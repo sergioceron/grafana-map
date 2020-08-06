@@ -1,0 +1,35 @@
+{
+  "type": "panel",
+  "name": "MapView",
+  "id": "mapview-besu-nodes",
+
+  "skipDataQuery": true,
+
+  "info": {
+    "description": "MapView for Besu Permissioned Nodes",
+    "author": {
+      "name": "Sergio Ceron Figueroa",
+      "url": "https://www.iadb.org"
+    },
+    "keywords": ["besu", "map", "mapview", "nodes", "permissioning", "lacchain"],
+    "logos": {
+      "small": "img/map.png",
+      "large": "img/map.png"
+    },
+    "links": [
+      {"name": "Project site", "url": "https://github.com/lacchain/grafana-map-nodes"},
+      {"name": "MIT License", "url": "https://github.com/grafana/grafana-map-nodes/blob/master/LICENSE"}
+    ],
+    "screenshots": [
+      {"name": "Showcase", "path": "img/screenshot-showcase.png"},
+      {"name": "Options", "path": "img/screenshot-map-options.png"}
+    ],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+
+  "dependencies": {
+    "grafanaVersion": "7.0.0",
+    "plugins": [ ]
+  }
+}
