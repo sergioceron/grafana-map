@@ -1,7 +1,7 @@
 export interface MapOptions {
   style: MapStyle;
   mapSettings: MapSettings;
-  besuSettings: BesuSettings;
+  ethStatsSettings: EthStatsSettings;
 }
 
 export enum MapStyle {
@@ -15,7 +15,8 @@ interface MapSettings {
   nodeMarkerColor: string;
 }
 
-interface BesuSettings {
-  ingressContractAddress: string;
-  rpcUrl: string;
+interface EthStatsSettings {
+  username: string;
+  password: string;
+  socketsUrl: string;
 }

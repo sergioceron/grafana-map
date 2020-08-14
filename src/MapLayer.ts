@@ -35,16 +35,36 @@ export default class MapLayer {
           type: 'double',
         },
         {
-          name: 'ip',
-          alias: 'ip',
+          name: 'name',
+          alias: 'name',
           type: 'string',
+        },
+        {
+          name: 'besu',
+          alias: 'besu',
+          type: 'string',
+        },
+        {
+          name: 'active',
+          alias: 'active',
+          type: 'string',
+        },
+        {
+          name: 'os',
+          alias: 'os',
+          type: 'string',
+        },
+        {
+          name: 'latency',
+          alias: 'latency',
+          type: 'integer',
         },
       ],
       source: [],
       outFields: ['*'],
       popupTemplate: {
-        title: () => {
-          return 'Node';
+        title: (feature: any) => {
+          return '<b>' + feature.graphic.attributes.name + '</b>';
         },
         outFields: ['*'],
         content: async (feature: any) => {
@@ -70,9 +90,19 @@ export default class MapLayer {
             field: 'type',
             stops: [
               {
+                value: 0,
+                color: 'rgb(0,233,225)',
+                label: 'regular',
+              },
+              {
                 value: 1,
-                color: 'rgba(33, 66, 99, 0.6)',
-                label: 'dffdaa',
+                color: 'rgb(248,229,37)',
+                label: 'validator',
+              },
+              {
+                value: 2,
+                color: 'rgb(200,70,255)',
+                label: 'validator',
               },
             ],
           },

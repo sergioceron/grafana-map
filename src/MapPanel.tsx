@@ -1,15 +1,10 @@
 import React, { PureComponent } from 'react';
 import { PanelProps } from '@grafana/data';
+import deepstream from 'deepstream.io-client-js';
 import { MapOptions, MapStyle } from './types';
 import { css } from 'emotion';
 
-import ethers from 'ethers';
 // @ts-ignore
-import request from 'request';
-// @ts-ignore
-import nodeIngressABI from './contracts/NodeIngress.json';
-// @ts-ignore
-import nodeListABI from './contracts/NodeList.json';
 import { loadCss, loadModules } from 'esri-loader';
 import MapLayer from './MapLayer';
 
@@ -18,68 +13,16 @@ interface State {
   // eslint-disable-next-line
 }
 
-const ipv4Prefix = '00000000000000000000ffff';
-
-const getIPLocation = (ip: string) =>
-  new Promise(resolve => {
-    let url = `http://api.ipstack.com/${ip}?access_key=67332e46b2ec77d406cffe607d152297`;
-    request(
-      {
-        url: url,
-        method: 'GET',
-        json: true,
-      },
-      (error: any, response: any, body: any) => {
-        if (response.statusCode !== 200) {
-          resolve('FAILED');
-        }
-
-        if (body.success === false) {
-          resolve('LIMIT_REACHED');
-        }
-
-        if (typeof body.latitude !== 'undefined') {
-          resolve({ latitude: body.latitude, longitude: body.longitude });
-        }
-        resolve('FAILED');
-      }
-    );
-  });
-
-const splitAddress = (address: string, digits: number) => {
-  const bits: string[] = [];
-
-  while (address.length >= digits) {
-    bits.push(address.slice(0, digits));
-    address = address.slice(digits);
-  }
-  return bits;
-};
-
-const getIpv4 = (address: string) => {
-  return splitAddress(address.split(ipv4Prefix)[1], 2)
-    .map(hex => {
-      return parseInt(hex, 16);
-    })
-    .join('.');
-};
-
 export class MapPanel extends PureComponent<Props, State> {
   mapRef = React.createRef<HTMLDivElement>();
 
   componentDidMount() {
-    console.log('Panel Mounted');
     const { options } = this.props;
     const {
       style,
-      besuSettings: { ingressContractAddress, rpcUrl },
+      ethStatsSettings: { username, password, socketsUrl },
       mapSettings: { nodeMarkerColor },
     } = options;
-    const nodeIngress = new ethers.Contract(
-      ingressContractAddress,
-      nodeIngressABI,
-      new ethers.providers.JsonRpcProvider(rpcUrl)
-    );
 
     loadCss(`https://js.arcgis.com/4.16/esri/themes/${style}/main.css`, 'style');
     loadModules(['esri/Map', 'esri/views/MapView', 'esri/layers/FeatureLayer', 'esri/geometry/Point'], {
@@ -99,29 +42,61 @@ export class MapPanel extends PureComponent<Props, State> {
       const layer = new FeatureLayer(mapLayer.getLayer());
       map.add(layer);
 
-      nodeIngress
-        .getContractAddress('0x72756c6573000000000000000000000000000000000000000000000000000000')
-        .then(async (address: string) => {
-          const nodeList = new ethers.Contract(address, nodeListABI, new ethers.providers.JsonRpcProvider(rpcUrl));
-          const size = parseInt(await nodeList.getSize(), 10);
-          for (let i = 1; i < size; i++) {
-            nodeList.getByIndex(i).then(async (whitelist: any) => {
-              const ipHex = whitelist[2];
-              const ip = getIpv4(ipHex.split('x')[1]);
-              // @ts-ignore
-              const { longitude, latitude } = await getIPLocation(ip);
-              await layer.applyEdits({
-                addFeatures: [
-                  {
-                    geometry: new Point({ y: latitude, x: longitude }),
-                    attributes: { ObjectID: i, ip, lon: longitude, lat: latitude },
+      const options = {
+        reconnectIntervalIncrement: 10000,
+        maxReconnectInterval: 30000,
+        maxReconnectAttempts: Infinity,
+        heartbeatInterval: 60000,
+      };
+
+      const getNodeType = (name: string) => {
+        const loweredName = name.toLowerCase();
+        if (loweredName.indexOf('boot') >= 0) return 2;
+        if (
+          loweredName.indexOf('validator') >= 0 ||
+          loweredName.indexOf('validador') >= 0 ||
+          loweredName.indexOf('_val') >= 0
+        )
+          return 1;
+        return 0;
+      };
+
+      const client = deepstream(socketsUrl, options).login({ username, password }, async success => {
+        if (success) {
+          // @ts-ignore
+          const list = await client.record.getList('ethstats/nodes').whenReady();
+          let i = 0;
+          // @ts-ignore
+          for (const entry of list.getEntries()) {
+            // @ts-ignore
+            const record = await client.record.getRecord(`${entry}/nodeData`).whenReady();
+            // @ts-ignore
+            const node = record.get()['ethstats:nodeData'];
+            const point = node['geo:point'].split(' ');
+            await layer.applyEdits({
+              addFeatures: [
+                {
+                  geometry: new Point({ y: point[0], x: point[1] }),
+                  attributes: {
+                    ObjectID: i++,
+                    name: node['ethstats:nodeName'],
+                    active: node['ethstats:nodeIsActive'],
+                    type: getNodeType(node['ethstats:nodeName']),
+                    latency: node['ethstats:wsLatency'],
+                    besu: node['ethstats:node'],
+                    os: `${node['ethstats:os']}@${node['ethstats:osVersion']}`,
+                    lon: point[1],
+                    lat: point[0],
                   },
-                ],
-              });
+                },
+              ],
             });
           }
-          // @ts-ignore
-        });
+        } else {
+          console.error(new Error('There is no valid DeepStream instance'));
+        }
+        client.close();
+      });
 
       return () => {
         if (view) {

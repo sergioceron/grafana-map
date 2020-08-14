@@ -23,7 +23,7 @@ export const optionsBuilder = (builder: PanelOptionsEditorBuilder<MapOptions>) =
   // TODO: refreshSettings.syncWithDashboard
 
   addMapSettings(builder);
-  addBesuSettings(builder);
+  addEthStatsSettings(builder);
 };
 //---------------------------------------------------------------------
 // DATE FORMAT
@@ -91,23 +91,29 @@ function addMapSettings(builder: PanelOptionsEditorBuilder<MapOptions>) {
     });
 }
 //---------------------------------------------------------------------
-// BESU SETTINGS
+// ETHSTATS SETTINGS
 //---------------------------------------------------------------------
-function addBesuSettings(builder: PanelOptionsEditorBuilder<MapOptions>) {
-  const category = ['Besu Options'];
+function addEthStatsSettings(builder: PanelOptionsEditorBuilder<MapOptions>) {
+  const category = ['EthStats Options'];
 
   builder
     .addTextInput({
       category,
-      path: 'besuSettings.ingressContractAddress',
+      path: 'ethStatsSettings.username',
       name: 'Ingress Contract Address',
-      defaultValue: '0x0000000000000000000000000000000000009999',
+      defaultValue: 'frontend',
     })
     .addTextInput({
       category,
-      path: 'besuSettings.rpcUrl',
-      name: 'Besu RPC Url',
-      defaultValue: 'http://35.184.61.29:4545',
+      path: 'ethStatsSettings.password',
+      name: 'Ingress Contract Address',
+      defaultValue: '',
+    })
+    .addTextInput({
+      category,
+      path: 'ethStatsSettings.socketsUrl',
+      name: 'Web Sockets Endpoint',
+      defaultValue: 'wss://ethserver.lacchain.net:8020/deepstream',
     });
 }
 
