@@ -83,7 +83,7 @@ function addMapSettings(builder: PanelOptionsEditorBuilder<MapOptions>) {
               }}
               prefix={prefix}
               suffix={suffix}
-              css={}
+              css={{ zIndex: 1 }}
             />
           </div>
         );

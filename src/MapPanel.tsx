@@ -36,7 +36,7 @@ const splitAddress = (address: string, digits: number) => {
 
 const hexToAscii = (str: string): string => {
   const hex = str.substr(2);
-  let result: string = '';
+  let result = '';
   for (let n = 0; n < hex.length; n += 2) {
     result += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
   }
