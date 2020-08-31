@@ -35,6 +35,21 @@ export default class MapLayer {
           type: 'double',
         },
         {
+          name: 'nodeType',
+          alias: 'nodeType',
+          type: 'string',
+        },
+        {
+          name: 'name',
+          alias: 'name',
+          type: 'string',
+        },
+        {
+          name: 'organization',
+          alias: 'organization',
+          type: 'string',
+        },
+        {
           name: 'ip',
           alias: 'ip',
           type: 'string',
@@ -43,8 +58,8 @@ export default class MapLayer {
       source: [],
       outFields: ['*'],
       popupTemplate: {
-        title: () => {
-          return 'Node';
+        title: (feature: any) => {
+          return '<b>' + feature.graphic.attributes.name + '</b>';
         },
         outFields: ['*'],
         content: async (feature: any) => {
@@ -67,12 +82,27 @@ export default class MapLayer {
         visualVariables: [
           {
             type: 'color',
-            field: 'type',
+            field: 'nodeType',
             stops: [
               {
+                value: 0,
+                color: 'rgb(0,233,225)',
+                label: 'bootnode',
+              },
+              {
                 value: 1,
-                color: 'rgba(33, 66, 99, 0.6)',
-                label: 'dffdaa',
+                color: 'rgb(248,229,37)',
+                label: 'validator',
+              },
+              {
+                value: 2,
+                color: 'rgb(200,70,255)',
+                label: 'writer',
+              },
+              {
+                value: 3,
+                color: 'rgb(188,187,187)',
+                label: 'observer',
               },
             ],
           },

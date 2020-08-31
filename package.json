@@ -30,6 +30,7 @@
     "esri-loader": "^2.15.0",
     "ethers": "^5.0.7",
     "moment-timezone": "0.5.28",
+    "ngeohash": "^0.6.3",
     "request": "^2.88.2"
   }
 }

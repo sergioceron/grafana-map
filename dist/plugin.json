@@ -25,7 +25,7 @@
       {"name": "Options", "path": "img/screenshot-map-options.png"}
     ],
     "version": "1.1.0-dev",
-    "updated": "2020-08-12"
+    "updated": "2020-08-31"
   },
 
   "dependencies": {

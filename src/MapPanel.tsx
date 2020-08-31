@@ -2,10 +2,14 @@ import React, { PureComponent } from 'react';
 import { PanelProps } from '@grafana/data';
 import { MapOptions, MapStyle } from './types';
 import { css } from 'emotion';
-
+// @ts-ignore
 import ethers from 'ethers';
 // @ts-ignore
 import request from 'request';
+
+// @ts-ignore
+import ngeohash from 'ngeohash';
+
 // @ts-ignore
 import nodeIngressABI from './contracts/NodeIngress.json';
 // @ts-ignore
@@ -20,32 +24,6 @@ interface State {
 
 const ipv4Prefix = '00000000000000000000ffff';
 
-const getIPLocation = (ip: string) =>
-  new Promise(resolve => {
-    let url = `http://api.ipstack.com/${ip}?access_key=67332e46b2ec77d406cffe607d152297`;
-    request(
-      {
-        url: url,
-        method: 'GET',
-        json: true,
-      },
-      (error: any, response: any, body: any) => {
-        if (response.statusCode !== 200) {
-          resolve('FAILED');
-        }
-
-        if (body.success === false) {
-          resolve('LIMIT_REACHED');
-        }
-
-        if (typeof body.latitude !== 'undefined') {
-          resolve({ latitude: body.latitude, longitude: body.longitude });
-        }
-        resolve('FAILED');
-      }
-    );
-  });
-
 const splitAddress = (address: string, digits: number) => {
   const bits: string[] = [];
 
@@ -54,6 +32,15 @@ const splitAddress = (address: string, digits: number) => {
     address = address.slice(digits);
   }
   return bits;
+};
+
+const hexToAscii = (str: string): string => {
+  const hex = str.substr(2);
+  let result: string = '';
+  for (let n = 0; n < hex.length; n += 2) {
+    result += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
+  }
+  return result;
 };
 
 const getIpv4 = (address: string) => {
@@ -68,7 +55,6 @@ export class MapPanel extends PureComponent<Props, State> {
   mapRef = React.createRef<HTMLDivElement>();
 
   componentDidMount() {
-    console.log('Panel Mounted');
     const { options } = this.props;
     const {
       style,
@@ -105,16 +91,25 @@ export class MapPanel extends PureComponent<Props, State> {
           const nodeList = new ethers.Contract(address, nodeListABI, new ethers.providers.JsonRpcProvider(rpcUrl));
           const size = parseInt(await nodeList.getSize(), 10);
           for (let i = 1; i < size; i++) {
-            nodeList.getByIndex(i).then(async (whitelist: any) => {
-              const ipHex = whitelist[2];
+            nodeList.getByIndex(i).then(async (allowlist: any) => {
+              const geoHash: string = hexToAscii(allowlist[5] + '');
+              const ipHex = allowlist[2];
               const ip = getIpv4(ipHex.split('x')[1]);
               // @ts-ignore
-              const { longitude, latitude } = await getIPLocation(ip);
+              const { longitude, latitude } = ngeohash.decode(geoHash);
               await layer.applyEdits({
                 addFeatures: [
                   {
                     geometry: new Point({ y: latitude, x: longitude }),
-                    attributes: { ObjectID: i, ip, lon: longitude, lat: latitude },
+                    attributes: {
+                      ObjectID: i,
+                      ip,
+                      lon: longitude,
+                      lat: latitude,
+                      nodeType: allowlist[4],
+                      name: allowlist[6],
+                      organization: allowlist[7],
+                    },
                   },
                 ],
               });
